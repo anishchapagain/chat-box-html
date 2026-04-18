@@ -98,4 +98,3 @@ For technical support or inquiries regarding ChatMax Securities services:
 - **Email**: contact@chatmax.com.np
 - **Phone**: 01-4412345
 - **Website**: [chatmax.com.np](https://chatmax.com.np/)
->>>>>>> ed1f12c (Initial commit)
