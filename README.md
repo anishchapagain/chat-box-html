@@ -96,5 +96,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For technical support or inquiries regarding ChatMax Securities services:
 - **Email**: contact@chatmax.com.np
-- **Phone**: 01-4412345
+- **Phone**: 01-4#####
 - **Website**: [chatmax.com.np](https://chatmax.com.np/)
