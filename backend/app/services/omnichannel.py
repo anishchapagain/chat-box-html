@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.models.models import User, Conversation, InteractionLog, FAQ
 from app.core.schemas import IncomingMessage, ChannelType, ConversationStatus, SenderType, DetectedLanguage
 from app.api.websockets import manager
+from app.core.audit_log import log_event
 
 class LanguageService:
     @staticmethod
@@ -37,6 +38,28 @@ class FAQService:
         return None, f"[Mock matched FAQ answer in {lang.value}] for: {text}"
 
 class OmnichannelService:
+    def _broadcast_dashboard_message(
+        conv: Conversation,
+        user_identifier: str,
+        channel: ChannelType,
+        content: str,
+        sender: SenderType
+    ):
+        payload = {
+            "type": "new_message",
+            "conversation_id": conv.id,
+            "user_identifier": user_identifier,
+            "channel": channel.value,
+            "content": content,
+            "sender": sender.value,
+            "status": conv.status.value,
+        }
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(manager.broadcast(payload))
+        except RuntimeError:
+            asyncio.run(manager.broadcast(payload))
+
     @staticmethod
     def process_incoming_message(db: Session, msg: IncomingMessage):
         # 1. Identify User
@@ -70,27 +93,46 @@ class OmnichannelService:
         )
         db.add(user_log)
         db.commit()
+        log_event(
+            "incoming_message",
+            conversation_id=conv.id,
+            user_identifier=user.identifier,
+            channel=msg.channel,
+            conversation_status=conv.status,
+            sender=SenderType.USER,
+            message_content=msg.content,
+            detected_language=detected_lang,
+        )
 
         # 4. State Machine Routing
         if conv.status == ConversationStatus.ACTIVE_HUMAN or conv.status == ConversationStatus.PENDING_HUMAN:
-            # Route to Dashboard via WebSockets
-            payload = {
-                "type": "new_message",
-                "conversation_id": conv.id,
-                "user_identifier": user.identifier,
-                "channel": msg.channel.value,
-                "content": msg.content,
-                "sender": "USER",
-                "status": conv.status.value
-            }
-            # Use asyncio to run the async broadcast inside this synchronous function
-            try:
-                loop = asyncio.get_running_loop()
-                loop.create_task(manager.broadcast(payload))
-            except RuntimeError:
-                asyncio.run(manager.broadcast(payload))
+            OmnichannelService._broadcast_dashboard_message(
+                conv=conv,
+                user_identifier=user.identifier,
+                channel=msg.channel,
+                content=msg.content,
+                sender=SenderType.USER,
+            )
+            log_event(
+                "message_routed_to_dashboard",
+                conversation_id=conv.id,
+                user_identifier=user.identifier,
+                channel=msg.channel,
+                conversation_status=conv.status,
+                route="HUMAN_QUEUE",
+                message_content=msg.content,
+            )
             
         elif conv.status == ConversationStatus.ACTIVE_AUTO:
+            # Product rule: all incoming messages remain in ACTIVE_AUTO unless an agent explicitly accepts from dashboard.
+            OmnichannelService._broadcast_dashboard_message(
+                conv=conv,
+                user_identifier=user.identifier,
+                channel=msg.channel,
+                content=msg.content,
+                sender=SenderType.USER,
+            )
+
             # Process Auto Mode
             faq_id, answer = FAQService.find_best_match(db, msg.content, detected_lang)
             
@@ -104,15 +146,49 @@ class OmnichannelService:
             )
             db.add(bot_log)
             db.commit()
+            OmnichannelService._broadcast_dashboard_message(
+                conv=conv,
+                user_identifier=user.identifier,
+                channel=msg.channel,
+                content=answer,
+                sender=SenderType.BOT,
+            )
+            log_event(
+                "auto_response_generated",
+                conversation_id=conv.id,
+                user_identifier=user.identifier,
+                channel=msg.channel,
+                conversation_status=conv.status,
+                detected_language=detected_lang,
+                matched_faq_id=faq_id,
+                response_content=answer,
+            )
             
             # Send message back to channel
-            OmnichannelService.send_outbound_message(msg.identifier, msg.channel, answer)
+            OmnichannelService.send_outbound_message(
+                msg.identifier,
+                msg.channel,
+                answer,
+                conversation_id=conv.id,
+            )
 
     @staticmethod
-    def send_outbound_message(identifier: str, channel: ChannelType, content: str):
+    def send_outbound_message(
+        identifier: str,
+        channel: ChannelType,
+        content: str,
+        conversation_id: str | None = None,
+    ):
         """
         Generic sender function. Routes to the specific platform adapter.
         """
+        log_event(
+            "outbound_message",
+            conversation_id=conversation_id,
+            recipient_identifier=identifier,
+            channel=channel,
+            message_content=content,
+        )
         if channel == ChannelType.WHATSAPP:
             print(f"[WHATSAPP OUT] To {identifier}: {content}")
             # Call Meta Graph API here

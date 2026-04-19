@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Capital Max - Agent Dashboard</title>
+    <title>ChatMax - Agent Dashboard</title>
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React & ReactDOM (UMD build for browser) -->
@@ -23,27 +23,43 @@
         const { useState, useEffect, useRef } = React;
 
         // Constants configurable for local dev
+        const API_BASE_URL = "http://127.0.0.1:8000/api/v1";
         const WS_URL = "ws://127.0.0.1:8000/api/v1/ws/dashboard";
-
-        // Mock Initial State (So you see something even if the DB is empty)
-        const INITIAL_CHATS = [
-            { id: '123', user_identifier: '9800000000', status: 'PENDING_HUMAN', channel: 'WHATSAPP', messages: [] },
-            { id: '124', user_identifier: 'WebUser_XYZ', status: 'ACTIVE_HUMAN', channel: 'WEB_WIDGET', messages: [
-                { sender: 'USER', content: 'Hello, I need help with Demat.' },
-                { sender: 'BOT', content: '[Mock matched FAQ answer in EN] for: Hello, I need help with Demat.' },
-                { sender: 'USER', content: 'Talk to human' }
-            ]}
-        ];
 
         function Dashboard() {
             const [wsStatus, setWsStatus] = useState('Connecting...');
-            const [chats, setChats] = useState(INITIAL_CHATS);
+            const [chats, setChats] = useState([]);
             const [selectedChatId, setSelectedChatId] = useState(null);
             const [replyText, setReplyText] = useState('');
             const wsRef = useRef(null);
             const chatEndRef = useRef(null);
 
-            // Connect to WebSocket
+            // Load existing open chats from DB-backed API on page load
+            useEffect(() => {
+                const loadChats = async () => {
+                    try {
+                        const res = await fetch(`${API_BASE_URL}/agent/chats`);
+                        if (!res.ok) throw new Error(`Failed to load chats: ${res.status}`);
+                        const data = await res.json();
+
+                        const normalizedChats = (data.chats || []).map(chat => ({
+                            ...chat,
+                            messages: (chat.messages || []).map(m => ({
+                                sender: m.sender,
+                                content: m.content
+                            }))
+                        }));
+
+                        setChats(normalizedChats);
+                    } catch (err) {
+                        console.error("Could not load chats from backend:", err);
+                    }
+                };
+
+                loadChats();
+            }, []);
+
+            // Connect to WebSocket for real-time updates
             useEffect(() => {
                 const ws = new WebSocket(WS_URL);
                 wsRef.current = ws;
@@ -52,27 +68,47 @@
                 ws.onclose = () => setWsStatus('🔴 Disconnected');
                 ws.onmessage = (event) => {
                     const data = JSON.parse(event.data);
+
                     if (data.type === 'new_message') {
                         setChats(prev => {
-                            // Find existing chat or create new one
-                            let existingIdx = prev.findIndex(c => c.id === data.conversation_id);
-                            let newChats = [...prev];
-                            
                             const newMsg = { sender: data.sender, content: data.content };
+                            const existingIdx = prev.findIndex(c => c.id === data.conversation_id);
 
                             if (existingIdx >= 0) {
-                                newChats[existingIdx].messages.push(newMsg);
-                            } else {
-                                newChats.push({
+                                return prev.map((chat, idx) =>
+                                    idx === existingIdx
+                                        ? {
+                                            ...chat,
+                                            status: data.status || chat.status,
+                                            messages: [...(chat.messages || []), newMsg]
+                                        }
+                                        : chat
+                                );
+                            }
+
+                            return [
+                                ...prev,
+                                {
                                     id: data.conversation_id,
                                     user_identifier: data.user_identifier,
                                     status: data.status,
                                     channel: data.channel,
                                     messages: [newMsg]
-                                });
-                            }
-                            return newChats;
+                                }
+                            ];
                         });
+                    }
+
+                    if (data.type === 'status_change') {
+                        setChats(prev =>
+                            prev
+                                .map(chat => chat.id === data.conversation_id ? { ...chat, status: data.new_status } : chat)
+                                .filter(chat => chat.status !== 'CLOSED')
+                        );
+
+                        if (data.new_status === 'CLOSED') {
+                            setSelectedChatId(current => current === data.conversation_id ? null : current);
+                        }
                     }
                 };
 
@@ -85,31 +121,83 @@
             }, [chats, selectedChatId]);
 
             const selectedChat = chats.find(c => c.id === selectedChatId);
+            const canReply = selectedChat && selectedChat.status === 'ACTIVE_HUMAN';
 
-            const handleSend = () => {
-                if (!replyText.trim() || !selectedChat) return;
-
-                // Optimistic UI update
-                setChats(prev => {
-                    let newChats = [...prev];
-                    let idx = newChats.findIndex(c => c.id === selectedChatId);
-                    newChats[idx].messages.push({ sender: 'AGENT', content: replyText });
-                    return newChats;
-                });
-
-                // In a real app, send REST POST here to save to DB and dispatch via OmnichannelService
-                console.log("Mock Sent to backend:", { conv_id: selectedChatId, content: replyText });
+            const handleSend = async () => {
+                if (!replyText.trim() || !selectedChat || !canReply) return;
+                const outbound = replyText.trim();
                 setReplyText('');
+
+                try {
+                    const res = await fetch(`${API_BASE_URL}/agent/reply`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            conversation_id: selectedChat.id,
+                            recipient_identifier: selectedChat.user_identifier,
+                            channel: selectedChat.channel,
+                            content: outbound
+                        })
+                    });
+                    if (!res.ok) throw new Error(`Failed to send reply: ${res.status}`);
+
+                    setChats(prev => prev.map(chat =>
+                        chat.id === selectedChatId
+                            ? { ...chat, messages: [...(chat.messages || []), { sender: 'AGENT', content: outbound }] }
+                            : chat
+                    ));
+                } catch (err) {
+                    console.error("Failed to send agent reply:", err);
+                    setReplyText(outbound);
+                }
             };
 
-            const acceptChat = (id) => {
-                setChats(prev => prev.map(c => c.id === id ? { ...c, status: 'ACTIVE_HUMAN' } : c));
-                setSelectedChatId(id);
+            const acceptChat = async (id) => {
+                const chat = chats.find(c => c.id === id);
+                if (!chat) return;
+
+                try {
+                    const res = await fetch(`${API_BASE_URL}/agent/status`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            conversation_id: chat.id,
+                            identifier: chat.user_identifier,
+                            channel: chat.channel,
+                            status: 'ACTIVE_HUMAN'
+                        })
+                    });
+                    if (!res.ok) throw new Error(`Failed to accept chat: ${res.status}`);
+
+                    setChats(prev => prev.map(c => c.id === id ? { ...c, status: 'ACTIVE_HUMAN' } : c));
+                    setSelectedChatId(id);
+                } catch (err) {
+                    console.error("Failed to accept chat:", err);
+                }
             };
 
-            const resolveChat = (id) => {
-                setChats(prev => prev.filter(c => c.id !== id));
-                setSelectedChatId(null);
+            const resolveChat = async (id) => {
+                const chat = chats.find(c => c.id === id);
+                if (!chat) return;
+
+                try {
+                    const res = await fetch(`${API_BASE_URL}/agent/status`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            conversation_id: chat.id,
+                            identifier: chat.user_identifier,
+                            channel: chat.channel,
+                            status: 'CLOSED'
+                        })
+                    });
+                    if (!res.ok) throw new Error(`Failed to resolve chat: ${res.status}`);
+
+                    setChats(prev => prev.filter(c => c.id !== id));
+                    setSelectedChatId(null);
+                } catch (err) {
+                    console.error("Failed to resolve chat:", err);
+                }
             };
 
             return (
@@ -120,16 +208,43 @@
                             <h2 class="font-bold">Agent Inbox</h2>
                             <span class="text-xs px-2 py-1 bg-black/20 rounded">{wsStatus}</span>
                         </div>
-                        
-                        <div class="p-2 border-b bg-gray-50 text-sm font-semibold text-gray-500">Unassigned (Pending)</div>
+
+                        <div class="p-2 border-b bg-gray-50 text-sm font-semibold text-gray-500">Auto Active (Bot)</div>
                         <div class="flex-1 overflow-y-auto chat-scroll">
-                            {chats.filter(c => c.status === 'PENDING_HUMAN').map(chat => (
-                                <div key={chat.id} class="p-3 border-b hover:bg-gray-50 cursor-pointer flex justify-between items-center">
+                            {chats.filter(c => c.status === 'ACTIVE_AUTO').map(chat => (
+                                <div key={chat.id}
+                                    onClick={() => setSelectedChatId(chat.id)}
+                                    class={`p-3 border-b hover:bg-gray-50 cursor-pointer flex justify-between items-center ${selectedChatId === chat.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''}`}>
                                     <div>
                                         <div class="font-semibold text-sm">{chat.user_identifier}</div>
                                         <div class="text-xs text-gray-500">{chat.channel}</div>
                                     </div>
-                                    <button onClick={() => acceptChat(chat.id)} class="text-xs bg-blue-500 text-white px-2 py-1 rounded">Accept</button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); acceptChat(chat.id); }}
+                                        class="text-xs bg-blue-500 text-white px-2 py-1 rounded"
+                                    >
+                                        Accept
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div class="p-2 border-b bg-gray-50 text-sm font-semibold text-gray-500">Unassigned (Pending)</div>
+                        <div class="flex-1 overflow-y-auto chat-scroll">
+                            {chats.filter(c => c.status === 'PENDING_HUMAN').map(chat => (
+                                <div key={chat.id}
+                                    onClick={() => setSelectedChatId(chat.id)}
+                                    class={`p-3 border-b hover:bg-gray-50 cursor-pointer flex justify-between items-center ${selectedChatId === chat.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''}`}>
+                                    <div>
+                                        <div class="font-semibold text-sm">{chat.user_identifier}</div>
+                                        <div class="text-xs text-gray-500">{chat.channel}</div>
+                                    </div>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); acceptChat(chat.id); }}
+                                        class="text-xs bg-blue-500 text-white px-2 py-1 rounded"
+                                    >
+                                        Accept
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -137,7 +252,7 @@
                         <div class="p-2 border-b bg-gray-50 text-sm font-semibold text-gray-500">My Active Chats</div>
                         <div class="flex-1 overflow-y-auto chat-scroll">
                             {chats.filter(c => c.status === 'ACTIVE_HUMAN').map(chat => (
-                                <div key={chat.id} 
+                                <div key={chat.id}
                                     onClick={() => setSelectedChatId(chat.id)}
                                     class={`p-3 border-b hover:bg-gray-50 cursor-pointer ${selectedChatId === chat.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''}`}>
                                     <div class="font-semibold text-sm">{chat.user_identifier}</div>
@@ -168,9 +283,9 @@
                                 <div class="flex-1 overflow-y-auto p-4 chat-scroll flex flex-col gap-3">
                                     {selectedChat.messages.map((m, i) => (
                                         <div key={i} class={`max-w-[70%] p-3 rounded-lg shadow-sm text-sm ${
-                                            m.sender === 'USER' ? 'bg-white self-start' : 
-                                            m.sender === 'AGENT' ? 'bg-[#dcf8c6] self-end' : 
-                                            'bg-gray-200 self-center text-center text-xs' // BOT messages
+                                            m.sender === 'USER' ? 'bg-white self-start' :
+                                            m.sender === 'AGENT' ? 'bg-[#dcf8c6] self-end' :
+                                            'bg-gray-200 self-center text-center text-xs'
                                         }`}>
                                             {m.sender === 'BOT' && <div class="text-[10px] text-gray-500 font-bold mb-1">BOT REPLY</div>}
                                             {m.content}
@@ -181,15 +296,16 @@
 
                                 {/* Input */}
                                 <div class="p-3 bg-gray-100 flex gap-2 items-center">
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         value={replyText}
                                         onChange={e => setReplyText(e.target.value)}
-                                        onKeyPress={e => e.key === 'Enter' && handleSend()}
-                                        placeholder="Type a message..." 
+                                        onKeyDown={e => e.key === 'Enter' && handleSend()}
+                                        placeholder={canReply ? "Type a message..." : "Accept chat to reply as human"}
+                                        disabled={!canReply}
                                         class="flex-1 p-3 rounded-full border-none outline-none focus:ring-2 focus:ring-green-500"
                                     />
-                                    <button onClick={handleSend} disabled={!replyText.trim() || wsStatus !== '🟢 Connected'} class="bg-[#075E54] text-white p-3 rounded-full disabled:opacity-50">
+                                    <button onClick={handleSend} disabled={!replyText.trim() || !canReply} class="bg-[#075E54] text-white p-3 rounded-full disabled:opacity-50">
                                         Send
                                     </button>
                                 </div>

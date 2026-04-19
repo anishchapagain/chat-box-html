@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import webhooks
+from app.api import websockets
 from app.core.config import settings
 from app.core.database import engine, Base
 
@@ -23,6 +24,7 @@ app.add_middleware(
 
 # Include Routers
 app.include_router(webhooks.router, prefix=settings.API_V1_STR)
+app.include_router(websockets.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def root():
