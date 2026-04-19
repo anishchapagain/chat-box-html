@@ -1,5 +1,5 @@
 /* Chat Agent CSS */
-.chatmax-chat-widget {
+.capitalmax-chat-widget {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   position: fixed;
   bottom: 20px;
@@ -11,7 +11,7 @@
 }
 
 /* Floating Action Button */
-.chatmax-chat-fab {
+.capitalmax-chat-fab {
   width: 60px;
   height: 60px;
   background-color: #25D366;
@@ -24,18 +24,18 @@
   transition: transform 0.3s ease;
 }
 
-.chatmax-chat-fab:hover {
+.capitalmax-chat-fab:hover {
   transform: scale(1.05);
 }
 
-.chatmax-chat-fab svg {
+.capitalmax-chat-fab svg {
   width: 32px;
   height: 32px;
   fill: #fff;
 }
 
 /* Chat Window */
-.chatmax-chat-window {
+.capitalmax-chat-window {
   width: 350px;
   height: 500px;
   max-height: 80vh;
@@ -51,12 +51,12 @@
   transition: transform 0.3s ease;
 }
 
-.chatmax-chat-window.open {
+.capitalmax-chat-window.open {
   transform: scale(1);
 }
 
 /* Header */
-.chatmax-chat-header {
+.capitalmax-chat-header {
   background-color: #075E54;
   color: #fff;
   padding: 15px;
@@ -67,19 +67,19 @@
   font-size: 16px;
 }
 
-.chatmax-chat-header-title {
+.capitalmax-chat-header-title {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.chatmax-chat-header-controls {
+.capitalmax-chat-header-controls {
   display: flex;
   align-items: center;
   gap: 15px;
 }
 
-.chatmax-chat-control-btn {
+.capitalmax-chat-control-btn {
   cursor: pointer;
   font-size: 20px;
   line-height: 1;
@@ -92,12 +92,12 @@
   align-items: center;
 }
 
-.chatmax-chat-control-btn:hover {
+.capitalmax-chat-control-btn:hover {
   opacity: 0.8;
 }
 
 /* Messages Area */
-.chatmax-chat-messages {
+.capitalmax-chat-messages {
   flex: 1;
   padding: 15px;
   overflow-y: auto;
@@ -109,7 +109,7 @@
 }
 
 /* Message Bubbles */
-.chatmax-chat-message {
+.capitalmax-chat-message {
   max-width: 80%;
   padding: 10px 14px;
   border-radius: 8px;
@@ -119,14 +119,26 @@
   word-wrap: break-word;
 }
 
-.chatmax-chat-message.bot {
+.capitalmax-chat-message.bot {
   background-color: #fff;
   align-self: flex-start;
   border-top-left-radius: 0;
   box-shadow: 0 1px 1px rgba(0,0,0,0.1);
 }
 
-.chatmax-chat-message.user {
+.capitalmax-chat-message.bot.error {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+
+.capitalmax-chat-message.bot.success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+.capitalmax-chat-message.user {
   background-color: #dcf8c6;
   align-self: flex-end;
   border-top-right-radius: 0;
@@ -134,14 +146,14 @@
 }
 
 /* Quick Replies (Buttons) */
-.chatmax-chat-quick-replies {
+.capitalmax-chat-quick-replies {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 5px;
 }
 
-.chatmax-chat-quick-reply-btn {
+.capitalmax-chat-quick-reply-btn {
   background-color: #e1f5fe;
   color: #0277bd;
   border: 1px solid #b3e5fc;
@@ -153,12 +165,12 @@
   text-align: left;
 }
 
-.chatmax-chat-quick-reply-btn:hover {
+.capitalmax-chat-quick-reply-btn:hover {
   background-color: #b3e5fc;
 }
 
 /* Input Area */
-.chatmax-chat-input-area {
+.capitalmax-chat-input-area {
   display: flex;
   padding: 10px;
   background-color: #f0f0f0;
@@ -166,7 +178,7 @@
   gap: 10px;
 }
 
-.chatmax-chat-input {
+.capitalmax-chat-input {
   flex: 1;
   border: none;
   padding: 12px 15px;
@@ -175,7 +187,7 @@
   font-size: 14px;
 }
 
-.chatmax-chat-send-btn {
+.capitalmax-chat-send-btn {
   background-color: #075E54;
   color: #fff;
   border: none;
@@ -189,7 +201,7 @@
   outline: none;
 }
 
-.chatmax-chat-send-btn svg {
+.capitalmax-chat-send-btn svg {
   width: 20px;
   height: 20px;
   fill: #fff;
@@ -198,7 +210,7 @@
 
 /* Responsive */
 @media (max-width: 480px) {
-  .chatmax-chat-window {
+  .capitalmax-chat-window {
     width: calc(100vw - 40px);
     height: calc(100vh - 120px);
     max-height: none;

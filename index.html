@@ -2,303 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    
-    <!-- SEO Metadata -->
-    <title>ChatMax Securities | Leading Stock Broker No. ## in Nepal | TMS & DEMAT</title>
-    <meta name="description" content="ChatMax Securities (Broker No. ##) offers premium stock brokerage services in Nepal. Open your Trading Account (TMS) and DEMAT online. Best customer support for NEPSE trading.">
-    <meta name="keywords" content="ChatMax Securities, Stock Broker Nepal, Broker No ##, NEPSE, TMS Nepal, Online Trading Nepal, DEMAT Account, Meroshare, Share Market Nepal, Investment Nepal, SEBON, CDSC">
-    <meta name="author" content="ChatMax Securities Ltd.">
-    <meta name="robots" content="index, follow">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://chatmax.com.np/">
-    <meta property="og:title" content="ChatMax Securities | Stock Brokerage & Investment Services">
-    <meta property="og:description" content="Nepal's premier stock brokerage firm. Experience seamless NEPSE trading with our expert support.">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatMax Chat Agent Demo</title>
+    <!-- Include the Chat Agent CSS -->
     <link rel="stylesheet" href="css/chat-agent.css">
     <style>
-        :root {
-            --primary-color: #075E54;
-            --secondary-color: #25D366;
-            --dark-blue: #023e8a;
-            --light-gray: #f4f7f6;
-            --text-dark: #333;
-        }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            color: var(--text-dark);
-            background-color: #fff;
-            line-height: 1.6;
-            overflow-x: hidden; /* Prevent horizontal scroll on small devices */
+            background-color: #f4f7f6;
+            color: #333;
         }
-
-        header {
-            background-color: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            padding: 1rem 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .logo {
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        nav {
-            display: flex;
-        }
-
-        nav a {
-            text-decoration: none;
-            color: var(--text-dark);
-            margin-left: 15px;
-            font-weight: 500;
-            font-size: 0.9rem;
-            transition: color 0.3s;
-        }
-
-        nav a:hover {
-            color: var(--primary-color);
-        }
-
-        .hero {
-            background: linear-gradient(rgba(7, 94, 84, 0.85), rgba(2, 62, 138, 0.85)), 
-                        url('https://images.unsplash.com/photo-1611974717484-78600f60510e?auto=format&fit=crop&w=1350&q=80');
-            background-size: cover;
-            background-position: center;
+        .header {
+            background-color: #075E54;
             color: white;
-            padding: 80px 5%;
+            padding: 20px;
             text-align: center;
         }
-
-        .hero h1 {
-            font-size: 2.2rem;
-            margin-bottom: 20px;
-            line-height: 1.2;
-        }
-
-        .hero p {
-            font-size: 1.1rem;
+        .content {
+            padding: 40px 20px;
             max-width: 800px;
-            margin: 0 auto 30px;
-        }
-
-        .btn {
-            display: inline-block;
-            background-color: var(--secondary-color);
-            color: white;
-            padding: 12px 25px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: transform 0.2s, background 0.3s;
-        }
-
-        .btn:hover {
-            background-color: #128C7E;
-            transform: translateY(-2px);
-        }
-
-        .stats-bar {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 15px 5%;
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap; /* Allows wrapping on small screens */
-            gap: 10px;
-            font-size: 0.85rem;
-        }
-
-        .services {
-            padding: 60px 5%;
+            margin: 0 auto;
             text-align: center;
-        }
-
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin-top: 40px;
-        }
-
-        .service-card {
-            padding: 30px;
-            border-radius: 12px;
-            background: var(--light-gray);
-            border: 1px solid #e0e0e0;
-            transition: all 0.3s ease;
-        }
-
-        .service-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-        }
-
-        .service-card h3 {
-            color: var(--primary-color);
-            margin-top: 0;
-        }
-
-        footer {
-            background-color: #1a1a1a;
-            color: #b3b3b3;
-            padding: 50px 5% 20px;
-            font-size: 0.85rem;
-        }
-
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        .footer-content h4 {
-            color: white;
-            margin-bottom: 15px;
-        }
-
-        .footer-bottom {
-            border-top: 1px solid #333;
-            padding-top: 20px;
-            text-align: center;
-        }
-
-        /* Mobile Responsiveness Tweak */
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                padding: 1rem;
-                gap: 15px;
-            }
-            
-            nav {
-                margin-left: 0;
-                justify-content: center;
-                width: 100%;
-            }
-
-            nav a {
-                margin: 0 10px;
-                font-size: 0.85rem;
-            }
-
-            .hero h1 {
-                font-size: 1.8rem;
-            }
-
-            .hero p {
-                font-size: 1.1rem;
-            }
-
-            .stats-bar {
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-            }
+            line-height: 1.6;
         }
     </style>
 </head>
 <body>
 
-    <header role="banner">
-        <div class="logo">
-            <span>&block; ChatMax Securities</span>
-        </div>
-        <nav role="navigation">
-            <a href="#home">Home</a>
-            <a href="#trading">Trading</a>
-            <a href="#demat">DEMAT</a>
-            <a href="#contact">Contact</a>
-        </nav>
-    </header>
+    <div class="header">
+        <h1>ChatMax Securities Limited</h1>
+        <p>Broker No. ##</p>
+    </div>
 
-    <main id="home">
-        <section class="hero">
-            <h1>Expert Stock Brokerage Services in Nepal</h1>
-            <p>Empowering investors with Broker No. ##. Start your stock market journey with our professional TMS and DEMAT services today.</p>
-            <a href="https://tms##.nepsetms.com.np/client-registration" class="btn" rel="noopener">Open Trading Account</a>
-        </section>
+    <div class="content">
+        <h2>Welcome to our website!</h2>
+        <p>This is a demo page to showcase the highly configurable, lightweight, and responsive Chat Agent.</p>
+        <p>Look at the bottom right corner of this page to interact with the Chat Agent.</p>
+        <p>You can click on the buttons provided by the agent or type your queries such as "Trading Account", "Demat Account", "Contact", or "Raise a Ticket".</p>
+    </div>
 
-        <div class="stats-bar">
-            <span><strong>NEPSE:</strong> 2,145.67 (+1.2%)</span>
-            <span><strong>Broker:</strong> 62</span>
-            <span><strong>Status:</strong> SEBON Licensed</span>
-            <span><strong>Member:</strong> CDSC & NEPSE</span>
-        </div>
-
-        <section class="services">
-            <h2>Our Core Financial Services</h2>
-            <div class="services-grid">
-                <article class="service-card">
-                    <h3>TMS Online Trading</h3>
-                    <p>Access the Nepal Stock Exchange via our high-speed Trading Management System. Secure and reliable execution for every trade.</p>
-                </article>
-                <article class="service-card">
-                    <h3>DP / DEMAT Services</h3>
-                    <p>Authorized Depository Participant services. Open and manage your DEMAT and Meroshare accounts seamlessly under one roof.</p>
-                </article>
-                <article class="service-card">
-                    <h3>Market Insights</h3>
-                    <p>Stay updated with the latest share market news, IPO alerts, and daily NEPSE updates to make informed investment decisions.</p>
-                </article>
-            </div>
-        </section>
-    </main>
-
-    <footer role="contentinfo">
-        <div class="footer-content">
-            <div>
-                <h4>ChatMax Securities</h4>
-                <p>Leading Stock Brokerage Firm (No. ##) dedicated to providing excellence in the Nepalese capital market.</p>
-            </div>
-            <div>
-                <h4>Contact Us</h4>
-                <p>CITY, Kathmandu, Nepal<br>
-                <strong>Tel:</strong> 01-4####### / 4#######<br>
-                <strong>Email:</strong> contact@chatmax.com.np</p>
-            </div>
-            <div>
-                <h4>Quick Links</h4>
-                <p>
-                    <a href="https://nepalstock.com" style="color: #b3b3b3;" target="_blank" rel="nofollow">NEPSE</a> | 
-                    <a href="https://sebon.gov.np" style="color: #b3b3b3;" target="_blank" rel="nofollow">SEBON</a> | 
-                    <a href="https://meroshare.cdsc.com.np" style="color: #b3b3b3;" target="_blank" rel="nofollow">Meroshare</a>
-                </p>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2026 ChatMax Securities Ltd. | Registered Stock Broker No. ##</p>
-        </div>
-    </footer>
-
-    <!-- Chat Agent Container -->
-    <div id="chatmax-chat-container"></div>
-
-    <!-- Core Scripts -->
+    <!-- Include the Chat Agent JS -->
     <script src="js/chat-agent.js"></script>
+
+    <!-- Initialize the Chat Agent -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Centralized configuration initialized from js/chat-agent.js
-            if (window.ChatMaxChatAgent) {
-                new ChatMaxChatAgent();
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize with default or custom configuration
+            const chatAgent = new CapitalMaxChatAgent({
+                botName: 'ChatMax Assistant',
+                ticketApiUrl: 'https://mockapi.chatmax.com/create-ticket' // Point this to your actual backend proxy
+            });
         });
     </script>
 </body>

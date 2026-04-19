@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capital Max - Agent Dashboard</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM (UMD build for browser) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        .chat-scroll::-webkit-scrollbar { width: 6px; }
+        .chat-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen overflow-hidden text-gray-800 font-sans">
+    <div id="root" class="h-full"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Constants configurable for local dev
+        const WS_URL = "ws://127.0.0.1:8000/api/v1/ws/dashboard";
+
+        // Mock Initial State (So you see something even if the DB is empty)
+        const INITIAL_CHATS = [
+            { id: '123', user_identifier: '9800000000', status: 'PENDING_HUMAN', channel: 'WHATSAPP', messages: [] },
+            { id: '124', user_identifier: 'WebUser_XYZ', status: 'ACTIVE_HUMAN', channel: 'WEB_WIDGET', messages: [
+                { sender: 'USER', content: 'Hello, I need help with Demat.' },
+                { sender: 'BOT', content: '[Mock matched FAQ answer in EN] for: Hello, I need help with Demat.' },
+                { sender: 'USER', content: 'Talk to human' }
+            ]}
+        ];
+
+        function Dashboard() {
+            const [wsStatus, setWsStatus] = useState('Connecting...');
+            const [chats, setChats] = useState(INITIAL_CHATS);
+            const [selectedChatId, setSelectedChatId] = useState(null);
+            const [replyText, setReplyText] = useState('');
+            const wsRef = useRef(null);
+            const chatEndRef = useRef(null);
+
+            // Connect to WebSocket
+            useEffect(() => {
+                const ws = new WebSocket(WS_URL);
+                wsRef.current = ws;
+
+                ws.onopen = () => setWsStatus('🟢 Connected');
+                ws.onclose = () => setWsStatus('🔴 Disconnected');
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'new_message') {
+                        setChats(prev => {
+                            // Find existing chat or create new one
+                            let existingIdx = prev.findIndex(c => c.id === data.conversation_id);
+                            let newChats = [...prev];
+                            
+                            const newMsg = { sender: data.sender, content: data.content };
+
+                            if (existingIdx >= 0) {
+                                newChats[existingIdx].messages.push(newMsg);
+                            } else {
+                                newChats.push({
+                                    id: data.conversation_id,
+                                    user_identifier: data.user_identifier,
+                                    status: data.status,
+                                    channel: data.channel,
+                                    messages: [newMsg]
+                                });
+                            }
+                            return newChats;
+                        });
+                    }
+                };
+
+                return () => ws.close();
+            }, []);
+
+            // Auto-scroll chat
+            useEffect(() => {
+                chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, [chats, selectedChatId]);
+
+            const selectedChat = chats.find(c => c.id === selectedChatId);
+
+            const handleSend = () => {
+                if (!replyText.trim() || !selectedChat) return;
+
+                // Optimistic UI update
+                setChats(prev => {
+                    let newChats = [...prev];
+                    let idx = newChats.findIndex(c => c.id === selectedChatId);
+                    newChats[idx].messages.push({ sender: 'AGENT', content: replyText });
+                    return newChats;
+                });
+
+                // In a real app, send REST POST here to save to DB and dispatch via OmnichannelService
+                console.log("Mock Sent to backend:", { conv_id: selectedChatId, content: replyText });
+                setReplyText('');
+            };
+
+            const acceptChat = (id) => {
+                setChats(prev => prev.map(c => c.id === id ? { ...c, status: 'ACTIVE_HUMAN' } : c));
+                setSelectedChatId(id);
+            };
+
+            const resolveChat = (id) => {
+                setChats(prev => prev.filter(c => c.id !== id));
+                setSelectedChatId(null);
+            };
+
+            return (
+                <div class="flex h-full">
+                    {/* LEFT PANE: QUEUE */}
+                    <div class="w-1/4 bg-white border-r flex flex-col">
+                        <div class="p-4 bg-[#075E54] text-white flex justify-between items-center">
+                            <h2 class="font-bold">Agent Inbox</h2>
+                            <span class="text-xs px-2 py-1 bg-black/20 rounded">{wsStatus}</span>
+                        </div>
+                        
+                        <div class="p-2 border-b bg-gray-50 text-sm font-semibold text-gray-500">Unassigned (Pending)</div>
+                        <div class="flex-1 overflow-y-auto chat-scroll">
+                            {chats.filter(c => c.status === 'PENDING_HUMAN').map(chat => (
+                                <div key={chat.id} class="p-3 border-b hover:bg-gray-50 cursor-pointer flex justify-between items-center">
+                                    <div>
+                                        <div class="font-semibold text-sm">{chat.user_identifier}</div>
+                                        <div class="text-xs text-gray-500">{chat.channel}</div>
+                                    </div>
+                                    <button onClick={() => acceptChat(chat.id)} class="text-xs bg-blue-500 text-white px-2 py-1 rounded">Accept</button>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div class="p-2 border-b bg-gray-50 text-sm font-semibold text-gray-500">My Active Chats</div>
+                        <div class="flex-1 overflow-y-auto chat-scroll">
+                            {chats.filter(c => c.status === 'ACTIVE_HUMAN').map(chat => (
+                                <div key={chat.id} 
+                                    onClick={() => setSelectedChatId(chat.id)}
+                                    class={`p-3 border-b hover:bg-gray-50 cursor-pointer ${selectedChatId === chat.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''}`}>
+                                    <div class="font-semibold text-sm">{chat.user_identifier}</div>
+                                    <div class="text-xs text-gray-500 truncate">
+                                        {chat.messages.length > 0 ? chat.messages[chat.messages.length-1].content : 'No messages yet'}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* MIDDLE PANE: CHAT WINDOW */}
+                    <div class="w-2/4 flex flex-col bg-[#ece5dd]">
+                        {selectedChat ? (
+                            <>
+                                {/* Header */}
+                                <div class="p-4 bg-gray-100 border-b flex justify-between items-center">
+                                    <div>
+                                        <h2 class="font-bold text-lg">{selectedChat.user_identifier}</h2>
+                                        <span class="text-xs text-gray-500">{selectedChat.channel}</span>
+                                    </div>
+                                    <button onClick={() => resolveChat(selectedChat.id)} class="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded shadow">
+                                        Resolve Chat
+                                    </button>
+                                </div>
+
+                                {/* Messages */}
+                                <div class="flex-1 overflow-y-auto p-4 chat-scroll flex flex-col gap-3">
+                                    {selectedChat.messages.map((m, i) => (
+                                        <div key={i} class={`max-w-[70%] p-3 rounded-lg shadow-sm text-sm ${
+                                            m.sender === 'USER' ? 'bg-white self-start' : 
+                                            m.sender === 'AGENT' ? 'bg-[#dcf8c6] self-end' : 
+                                            'bg-gray-200 self-center text-center text-xs' // BOT messages
+                                        }`}>
+                                            {m.sender === 'BOT' && <div class="text-[10px] text-gray-500 font-bold mb-1">BOT REPLY</div>}
+                                            {m.content}
+                                        </div>
+                                    ))}
+                                    <div ref={chatEndRef} />
+                                </div>
+
+                                {/* Input */}
+                                <div class="p-3 bg-gray-100 flex gap-2 items-center">
+                                    <input 
+                                        type="text" 
+                                        value={replyText}
+                                        onChange={e => setReplyText(e.target.value)}
+                                        onKeyPress={e => e.key === 'Enter' && handleSend()}
+                                        placeholder="Type a message..." 
+                                        class="flex-1 p-3 rounded-full border-none outline-none focus:ring-2 focus:ring-green-500"
+                                    />
+                                    <button onClick={handleSend} disabled={!replyText.trim() || wsStatus !== '🟢 Connected'} class="bg-[#075E54] text-white p-3 rounded-full disabled:opacity-50">
+                                        Send
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <div class="flex-1 flex items-center justify-center text-gray-500 flex-col gap-4">
+                                <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                                <p>Select a chat from the queue to start messaging</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* RIGHT PANE: CONTEXT */}
+                    <div class="w-1/4 bg-white border-l flex flex-col">
+                        <div class="p-4 bg-gray-50 border-b font-bold">User Context</div>
+                        {selectedChat ? (
+                            <div class="p-4 flex flex-col gap-4">
+                                <div class="bg-blue-50 p-3 rounded border border-blue-100">
+                                    <h3 class="text-xs font-bold text-blue-800 uppercase mb-1">Details</h3>
+                                    <p class="text-sm"><strong>ID:</strong> {selectedChat.user_identifier}</p>
+                                    <p class="text-sm"><strong>Source:</strong> {selectedChat.channel}</p>
+                                    <p class="text-sm"><strong>Status:</strong> {selectedChat.status}</p>
+                                </div>
+
+                                <div>
+                                    <h3 class="text-xs font-bold text-gray-500 uppercase mb-2">Quick Replies</h3>
+                                    <div class="flex flex-col gap-2">
+                                        <button onClick={() => setReplyText("Hello! How can I assist you today?")} class="text-left text-sm bg-gray-100 hover:bg-gray-200 p-2 rounded border">Greeting</button>
+                                        <button onClick={() => setReplyText("Please provide your Demat account number so I can check.")} class="text-left text-sm bg-gray-100 hover:bg-gray-200 p-2 rounded border">Request Demat Info</button>
+                                        <button onClick={() => setReplyText("I have resolved your issue. Let me know if you need anything else!")} class="text-left text-sm bg-gray-100 hover:bg-gray-200 p-2 rounded border">Closing</button>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div class="p-4 text-sm text-gray-400 text-center">No chat selected</div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Dashboard />);
+    </script>
+</body>
+</html>

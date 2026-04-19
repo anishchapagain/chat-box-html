@@ -108,7 +108,7 @@ Right before the closing `</body>` tag, add the JS script and initialize it:
             autoReplies: {
                 'trading account': 'To open a Trading Account, you can process your KYC online through our website or visit our office. [Click here to open](https://tms62.nepsetms.com.np/client-registration)',
                 'demat account': 'You can open a DEMAT & Meroshare account online through our website. [Click here to open](https://dp.chatmax.com.np/DPForm?type=demat)',
-                'contact': 'ChatMax Securities Limited (Broker no. 62)\\nPutalisadak - 28, Kathmandu, Nepal\\nPhone: 01-4412345 / 4423456\\nEmail: contact@chatmax.com.np',
+                'contact': 'ChatMax Securities Limited (Broker No. ##)\\nPutalisadak - 28, Kathmandu, Nepal\\nPhone: 01-4412345 / 4423456\\nEmail: contact@chatmax.com.np',
                 'services': 'We offer Stock Brokerage Services, Depository Services (DEMAT), and full customer support for trading at NEPSE.',
                 'hello': 'Hi there! How can I assist you with your investment journey today?',
                 'hi': 'Hello! How can we help you?',
@@ -174,3 +174,89 @@ autoReplies: {
 - **The Value (Right Side)**: This is the response the bot will give.
 - **Links**: Use standard Markdown formatting for links: `[Visible Text](https://link-url.com)`.
 - **Line Breaks**: Use `\n` to force a new line in the bot's message.
+
+## 7 Omnichannel Backend Entity Flowchart
+flowchart TD
+    %% Define External Actors
+    UserWA(User via WhatsApp API) -.->|JSON| WebhookWA(webhooks.py: WhatsApp Endpoint)
+    UserWeb(User via Web Widget) -.->|JSON| WebhookWeb(webhooks.py: Web Endpoint)
+    AgentDash(Agent Dashboard / React) -.->|WebSockets| WebhookWS(WebSocket Endpoint)
+
+    %% Webhook Normalization
+    subgraph FastAPI Routers
+        WebhookWA -->|Normalizes to 'IncomingMessage'| Router
+        WebhookWeb -->|Normalizes to 'IncomingMessage'| Router
+    end
+
+    %% Core Services
+    subgraph Omnichannel Service (omnichannel.py)
+        Router(OmnichannelService.process_incoming_message)
+        
+        Router --> IdentifyUser[1. Identify User in DB]
+        IdentifyUser --> IdentifyConv[2. Find/Create Active Conversation]
+        IdentifyConv --> DetectLang[3. LanguageService.detect_language]
+        DetectLang --> LogUserMsg[4. Log Message to InteractionLog]
+        
+        LogUserMsg --> StateCheck{5. Check Conversation Status}
+        
+        %% State Branches
+        StateCheck -->|ACTIVE_HUMAN| HumanRoute[Route to Agent Dashboard]
+        StateCheck -->|ACTIVE_AUTO| AutoRoute[FAQService.find_best_match]
+        
+        %% Auto Route Details
+        AutoRoute --> GetFAQ[(Query 'faqs' DB by Language)]
+        GetFAQ --> FormatReply[Format Bot Answer]
+        FormatReply --> LogBotMsg[6. Log Bot Reply to InteractionLog]
+        LogBotMsg --> SendOutbound[7. Send Outbound Message]
+        
+        %% Human Route Details
+        HumanRoute --> WebhookWS
+        WebhookWS -.-> AgentDash
+        AgentDash -.->|Agent Types Reply| SendOutboundAgent[Agent sends reply via API]
+        SendOutboundAgent --> LogAgentMsg[Log Agent Reply to InteractionLog]
+        LogAgentMsg --> SendOutbound
+    end
+
+    %% Outbound Dispatcher
+    subgraph Outbound Dispatcher
+        SendOutbound --> ChannelCheck{Which Channel?}
+        ChannelCheck -->|WhatsApp| OutWA[Call Meta Graph API]
+        ChannelCheck -->|Web Widget| OutWeb[Send via WebSockets]
+    end
+    
+    OutWA -.-> UserWA
+    OutWeb -.-> UserWeb
+    
+    %% Database Note
+    Database[(PostgreSQL DB)]
+    IdentifyUser -.-> Database
+    IdentifyConv -.-> Database
+    LogUserMsg -.-> Database
+    GetFAQ -.-> Database
+    LogBotMsg -.-> Database
+    LogAgentMsg -.-> Database
+
+    classDef external fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef process fill:#bbf,stroke:#333,stroke-width:2px;
+    classDef decision fill:#ff9,stroke:#333,stroke-width:2px;
+    classDef db fill:#fbd,stroke:#333,stroke-width:2px;
+
+    class UserWA,UserWeb,AgentDash external;
+    class Router,IdentifyUser,IdentifyConv,DetectLang,LogUserMsg,AutoRoute,FormatReply,LogBotMsg,SendOutbound,SendOutboundAgent,LogAgentMsg,OutWA,OutWeb process;
+    class StateCheck,ChannelCheck decision;
+    class Database,GetFAQ db;
+
+### Step-by-Step Breakdown of the Flow:
+Ingestion & Normalization: webhooks.py receives a raw payload from Meta (WhatsApp) or your Website. It extracts just the text and the phone number/session ID, converting it into a strict Pydantic IncomingMessage object.
+
+User & Conversation Linking: OmnichannelService takes the IncomingMessage. It talks to the Database to find out who this user is and if they currently have an open chat (Conversation).
+
+Language & Logging: The text is passed to LanguageService to detect English vs. Nepali. Then, the raw message is permanently saved to the InteractionLog table.
+
+The State Fork: The system checks the status of the Conversation:
+
+If AUTO_MODE: It queries the faqs database using the detected language. It formulates a reply, logs the bot's reply to the database, and sends it out.
+
+If HUMAN_MODE: The bot stays quiet. The message is simply routed up to the React Agent Dashboard for a human to read.
+
+Outbound Dispatch: When the bot (or the human agent) creates a response, the SendOutbound function checks the channel. If it's a WhatsApp user, it fires an HTTP request to Meta's servers. If it's a web user, it fires a WebSocket event back to the browser.
