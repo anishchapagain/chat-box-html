@@ -1,0 +1,102 @@
+version: "3.1"
+
+nlu:
+  - intent: account_opening
+    examples: |
+      - open account
+      - new account
+      - create account
+      - account opening
+      - खाता खोल्ने (NE)
+      - नयाँ खाता (NE)
+      - डिम्याट खाता (NE)
+      - khata kholne (NE_ROM)
+      - naya khata (NE_ROM)
+      - demat khata (NE_ROM)
+
+  - intent: management_fee
+    examples: |
+      - management fee
+      - annual fee
+      - yearly charge
+      - maintenance fee
+      - व्यवस्थापन शुल्क (NE)
+      - वार्षिक शुल्क (NE)
+      - नवीकरण शुल्क (NE)
+      - management fee (NE_ROM)
+      - barshik sulka (NE_ROM)
+      - renew charge (NE_ROM)
+
+  - intent: science_fee
+    examples: |
+      - science fee
+      - science stream fee
+      - science tuition
+      - विज्ञान शुल्क (NE)
+      - विज्ञान संकाय शुल्क (NE)
+      - science fee (NE_ROM)
+      - bigyan sulka (NE_ROM)
+      - science stream fee (NE_ROM)
+
+  - intent: account_balance
+    examples: |
+      - balance
+      - check balance
+      - available balance
+      - ब्यालेन्स (NE)
+      - बचत रकम (NE)
+      - उपलब्ध रकम (NE)
+      - balance herne (NE_ROM)
+      - available balance (NE_ROM)
+      - check balance (NE_ROM)
+
+  - intent: office_hours
+    examples: |
+      - office hours
+      - working hours
+      - open time
+      - close time
+      - कार्यालय समय (NE)
+      - सेवा समय (NE)
+      - खुल्ने समय (NE)
+      - office time (NE_ROM)
+      - kaaryalaya samaya (NE_ROM)
+      - khulne samaya (NE_ROM)
+
+  - intent: contact_support
+    examples: |
+      - contact support
+      - agent
+      - human help
+      - call me
+      - सहयोग (NE)
+      - एजेन्ट (NE)
+      - मानव सहयोग (NE)
+      - agent sanga kura (NE_ROM)
+      - manche support (NE_ROM)
+      - human help (NE_ROM)
+
+  - intent: kyc_update
+    examples: |
+      - update kyc
+      - change kyc
+      - address update
+      - document update
+      - KYC अपडेट (NE)
+      - ठेगाना परिवर्तन (NE)
+      - कागजात अपडेट (NE)
+      - kyc update (NE_ROM)
+      - thegana update (NE_ROM)
+      - document update (NE_ROM)
+
+  - intent: reset_password
+    examples: |
+      - reset password
+      - forgot password
+      - password change
+      - पासवर्ड रिसेट (NE)
+      - पासवर्ड बिर्सें (NE)
+      - पासवर्ड परिवर्तन (NE)
+      - password reset (NE_ROM)
+      - password birse (NE_ROM)
+      - password change (NE_ROM)

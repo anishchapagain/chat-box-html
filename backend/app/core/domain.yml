@@ -1,0 +1,47 @@
+version: "3.1"
+
+responses:
+  utter_account_opening:
+    en: "You can open an account online by submitting KYC details and identity documents. We can share the official onboarding link."
+    ne: "तपाईँ KYC विवरण र परिचयपत्र कागजात पेश गरेर अनलाइन खाता खोल्न सक्नुहुन्छ। हामी आधिकारिक दर्ता लिंक पठाउन सक्छौँ।"
+    ne_rom: "Tapai KYC details ra ID documents diyera online khata kholna saknuhunchha. Hami official onboarding link pathauna sakchhau."
+
+  utter_management_fee:
+    en: "The management fee is charged annually. Exact amount depends on your account plan and services."
+    ne: "व्यवस्थापन शुल्क वार्षिक रूपमा लाग्छ। ठ्याक्कै रकम तपाईँको खाता योजना र सेवामा निर्भर हुन्छ।"
+    ne_rom: "Management fee barshik lagcha. Thyakai amount tapai ko account plan ra service ma bhar parchha."
+
+  utter_science_fee:
+    en: "Science fee varies by grade and course package. Please share grade/class so we can provide exact pricing."
+    ne: "विज्ञान शुल्क कक्षा र कोर्स प्याकेज अनुसार फरक हुन्छ। कृपया कक्षा जानकारी दिनुहोस्, हामी ठ्याक्कै शुल्क बताउँछौँ।"
+    ne_rom: "Science fee class ra package anusaar फरक हुन्छ. Kripaya class info dinuhos, hami exact fee dinchhau."
+
+  utter_account_balance:
+    en: "Please log in to your dashboard to view real-time balance. If needed, we can guide you step-by-step."
+    ne: "रियल-टाइम ब्यालेन्स हेर्न ड्यासबोर्डमा लगइन गर्नुहोस्। चाहिएको खण्डमा हामी चरणबद्ध सहयोग गर्न सक्छौँ।"
+    ne_rom: "Real-time balance herna dashboard ma login garnuhos. Chahiyo bhane hami step-by-step help garchhau."
+
+  utter_office_hours:
+    en: "Our support hours are Sunday to Friday, 10:00 AM to 5:00 PM (local time)."
+    ne: "हाम्रो सहयोग समय आइतबारदेखि शुक्रबार, बिहान १०:०० देखि साँझ ५:०० सम्म हो।"
+    ne_rom: "Hamro support hours Aaitabar dekhi Shukrabar, bihana 10 baje dekhi beluka 5 baje samma ho."
+
+  utter_contact_support:
+    en: "I can connect you to a human agent. Please share your preferred callback number and time."
+    ne: "म तपाईँलाई मानव एजेन्टसँग जोड्न सक्छु। कृपया सम्पर्क नम्बर र उपयुक्त समय दिनुहोस्।।"
+    ne_rom: "Ma tapai lai human agent sanga jodna sakchu. Kripaya contact number ra suitable time dinuhos."
+
+  utter_kyc_update:
+    en: "To update KYC, submit your new document and address proof through the KYC update portal."
+    ne: "KYC अपडेट गर्न नयाँ कागजात र ठेगाना प्रमाण KYC पोर्टलमार्फत पेश गर्नुहोस्।"
+    ne_rom: "KYC update garna naya document ra address proof KYC portal bata submit garnuhos."
+
+  utter_reset_password:
+    en: "Use the Forgot Password option on login. You will receive an OTP to set a new password securely."
+    ne: "लगइनमा Forgot Password विकल्प प्रयोग गर्नुहोस्। नयाँ पासवर्ड सेट गर्न OTP प्राप्त हुनेछ।"
+    ne_rom: "Login ma Forgot Password option use garnuhos. Naya password set garna OTP auncha."
+
+  utter_default_fallback:
+    en: "I'm sorry, I didn't quite understand that. Connecting you to a human agent for further assistance."
+    ne: "माफ गर्नुहोस्, मैले त्यो बुझिन। थप सहयोगको लागि म तपाईँलाई मानव एजेन्टसँग जोड्दै छु।"
+    ne_rom: "Maaf garnuhos, maile tyo bujhina. Thap sahayog ko lagi ma tapai lai human agent sanga joddai chhu."

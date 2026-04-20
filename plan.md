@@ -272,3 +272,27 @@ Example classification guidance:
   - `GET /api/v1/agent/chats/history` with pagination and filters (`identifier`, `date_from`, `date_to`, `channel`).
   - Optional `GET /api/v1/agent/chats/{conversation_id}` for full transcript retrieval.
   - Optional `GET /api/v1/agent/users/{identifier}/conversations` to show past + current conversations for one user.
+
+## 19. NLU/RASA Architecture (Professional Upgrade)
+Based on professional investigation, the project will transition from keyword matching to a semantic NLU-driven architecture (Rasa-lite).
+
+### 19.1. NLU Engine: Vector Similarity
+- **Core Technology**: `sentence-transformers` using a multilingual model (e.g., `paraphrase-multilingual-MiniLM-L12-v2`).
+- **Multilingual Support**: Bridges English and Nepali (Devanagari) in the same vector space.
+- **Romanized Nepali (NE_ROM)**: Handled via specific training examples in `nlu.yml` to bridge the gap where pre-trained models are weaker.
+
+### 19.2. Rasa-Style Configuration (YAML)
+- **`nlu.yml`**: Defines intents and training examples across all three languages (EN, NE, NE_ROM).
+- **`domain.yml`**: Defines multilingual responses (`utter_...`) and categories.
+- **`stories.yml`**: Maps intent sequences to actions (e.g., `contact_support` -> `action_handoff`).
+
+### 19.3. Implementation Strategy
+1. **Lightweight Integration**: No standalone Rasa server; implement a `NLUService` within FastAPI using `scikit-learn` for similarity computation.
+2. **Confidence Gating**:
+   - **High Confidence (> 0.75)**: Auto-reply using matched FAQ.
+   - **Low Confidence (< 0.75)**: Fallback message and route to `PENDING_HUMAN`.
+3. **Active Learning Workflow**:
+   - Log low-confidence queries to `omnichannel_events.log` (JSONL).
+   - Agent reviews logs to "teach" the bot by adding examples to `nlu.yml`.
+4. **Data Sync**: The `faqs` database table will remain as a persistent cache of the YAML-defined responses for high-speed retrieval.
+

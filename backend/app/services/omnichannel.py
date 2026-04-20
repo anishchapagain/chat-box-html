@@ -6,12 +6,14 @@ from app.core.schemas import IncomingMessage, ChannelType, ConversationStatus, S
 from app.api.websockets import manager
 from app.core.audit_log import log_event
 
+from app.services.nlu_service import nlu_service
+
 class LanguageService:
     @staticmethod
     def detect_language(text: str) -> DetectedLanguage:
         """
-        Mock NLP Language Detection.
-        In production, this would use a dedicated NLP model (e.g., fastText or an LLM).
+        Heuristic language detection.
+        Improved to avoid false positives on short tokens.
         """
         text_lower = text.lower()
         
@@ -19,9 +21,10 @@ class LanguageService:
         if re.search(r'[\u0900-\u097F]', text):
             return DetectedLanguage.NE
             
-        # Romanized Nepali keywords
-        ne_rom_keywords = ['kasto', 'k', 'ho', 'kasari', 'khata', 'kholne', 'laagi']
-        if any(word in text_lower for word in ne_rom_keywords):
+        # Romanized Nepali keywords - focus on specific words
+        ne_rom_keywords = ['kasto', 'kasari', 'khata', 'kholne', 'laagi', 'chha', 'ho', 'bhayeko']
+        # Check if any keyword matches as a full word
+        if any(re.search(rf'\b{word}\b', text_lower) for word in ne_rom_keywords):
             return DetectedLanguage.NE_ROM
             
         # Default fallback
@@ -134,18 +137,33 @@ class OmnichannelService:
             )
 
             # Process Auto Mode
-            faq_id, answer = FAQService.find_best_match(db, msg.content, detected_lang)
+            # faq_id, answer = FAQService.find_best_match(db, msg.content, detected_lang)
+
+            # Process Auto Mode (NLU Engine)
+            intent, confidence = nlu_service.find_best_match(msg.content)
             
+            if intent:
+                answer = nlu_service.get_response(intent, detected_lang)
+                decision = "AUTO_ANSWER"
+            else:
+                answer = nlu_service.get_fallback_response(detected_lang)
+                decision = "FALLBACK"
+                # If fallback, we could optionally move to PENDING_HUMAN here
+                # but following Section 3 of plan.md: "All inbound messages stay in ACTIVE_AUTO by default."
+                # Section 16 recommends: "Place conversation into staff queue (PENDING_HUMAN or equivalent)"
+                # Let's stick to ACTIVE_AUTO but send fallback, and the agent will see it in the "Auto" queue.
+
             # Log Bot Response
             bot_log = InteractionLog(
                 conversation_id=conv.id,
                 sender_type=SenderType.BOT,
                 message_content=answer,
-                matched_faq_id=faq_id,
+                matched_faq_id=intent, # Store intent name ( matched_faq_id=faq_id)
                 detected_language=detected_lang
             )
             db.add(bot_log)
             db.commit()
+            
             OmnichannelService._broadcast_dashboard_message(
                 conv=conv,
                 user_identifier=user.identifier,
@@ -153,6 +171,7 @@ class OmnichannelService:
                 content=answer,
                 sender=SenderType.BOT,
             )
+            
             log_event(
                 "auto_response_generated",
                 conversation_id=conv.id,
@@ -160,7 +179,9 @@ class OmnichannelService:
                 channel=msg.channel,
                 conversation_status=conv.status,
                 detected_language=detected_lang,
-                matched_faq_id=faq_id,
+                matched_intent=intent, # matched_faq_id=faq_id,
+                confidence=float(confidence),
+                decision=decision,
                 response_content=answer,
             )
             
