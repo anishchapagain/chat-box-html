@@ -4,6 +4,7 @@ from pathlib import Path
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from app.core.schemas import DetectedLanguage
+from app.core.config import settings
 
 class NLUService:
     _instance = None
@@ -44,11 +45,14 @@ class NLUService:
         self.example_embeddings = self.model.encode(self.examples)
         self._initialized = True
 
-    def find_best_match(self, text: str, threshold: float = 0.75):
+    def find_best_match(self, text: str, threshold: float | None = None):
         """
         Finds the best intent for the given text using cosine similarity.
         Returns: (intent_name, confidence_score)
         """
+        if threshold is None:
+            threshold = settings.NLU_THRESHOLD
+            
         query_embedding = self.model.encode([text])
         similarities = cosine_similarity(query_embedding, self.example_embeddings)[0]
         

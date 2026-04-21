@@ -1,102 +1,196 @@
 version: "3.1"
 
 nlu:
-  - intent: account_opening
+  - intent: location
     examples: |
-      - open account
-      - new account
-      - create account
-      - account opening
-      - खाता खोल्ने (NE)
-      - नयाँ खाता (NE)
-      - डिम्याट खाता (NE)
-      - khata kholne (NE_ROM)
-      - naya khata (NE_ROM)
-      - demat khata (NE_ROM)
+      - where is the college?
+      - location of gcm
+      - where is global college of management?
+      - location
+      - address
+      - कलेज कहाँ छ? (NE)
+      - ठेगाना (NE)
+      - gcm location kahan ho? (NE_ROM)
+      - college kahan chha? (NE_ROM)
+      - thegana (NE_ROM)
 
-  - intent: management_fee
+  - intent: medium_of_instruction
     examples: |
-      - management fee
-      - annual fee
-      - yearly charge
-      - maintenance fee
-      - व्यवस्थापन शुल्क (NE)
-      - वार्षिक शुल्क (NE)
-      - नवीकरण शुल्क (NE)
-      - management fee (NE_ROM)
-      - barshik sulka (NE_ROM)
-      - renew charge (NE_ROM)
+      - is it english medium?
+      - what is the medium of instruction?
+      - do you teach in english?
+      - english medium
+      - medium
+      - language
+      - अङ्ग्रेजी माध्यम हो? (NE)
+      - माध्यम (NE)
+      - english medium ho ki haina? (NE_ROM)
+      - kasto medium ma padhai hunchha? (NE_ROM)
+      - madhyam (NE_ROM)
 
-  - intent: science_fee
+  - intent: operating_history
     examples: |
-      - science fee
-      - science stream fee
-      - science tuition
-      - विज्ञान शुल्क (NE)
-      - विज्ञान संकाय शुल्क (NE)
-      - science fee (NE_ROM)
-      - bigyan sulka (NE_ROM)
-      - science stream fee (NE_ROM)
+      - how old is the college?
+      - how long has gcm been operating?
+      - established year of gcm
+      - history
+      - experience
+      - establishment
+      - कलेज कति पुरानो हो? (NE)
+      - इतिहास (NE)
+      - college kaile dekhi chaleko ho? (NE_ROM)
+      - kati barsa bhayo gcm kholeko? (NE_ROM)
+      - itihas (NE_ROM)
 
-  - intent: account_balance
+  - intent: contact_info
     examples: |
-      - balance
-      - check balance
-      - available balance
-      - ब्यालेन्स (NE)
-      - बचत रकम (NE)
-      - उपलब्ध रकम (NE)
-      - balance herne (NE_ROM)
-      - available balance (NE_ROM)
-      - check balance (NE_ROM)
+      - how can i contact the college?
+      - phone number and email
+      - gcm contact details
+      - contact
+      - phone
+      - email
+      - call
+      - कलेजलाई कसरी सम्पर्क गर्ने? (NE)
+      - फोन नम्बर (NE)
+      - सम्पर्क (NE)
+      - phone number kati ho? (NE_ROM)
+      - college ko contact number dinu na (NE_ROM)
+      - samparka (NE_ROM)
 
-  - intent: office_hours
+  - intent: campus_tour
     examples: |
-      - office hours
-      - working hours
-      - open time
-      - close time
-      - कार्यालय समय (NE)
-      - सेवा समय (NE)
-      - खुल्ने समय (NE)
-      - office time (NE_ROM)
-      - kaaryalaya samaya (NE_ROM)
-      - khulne samaya (NE_ROM)
+      - can i visit the campus?
+      - virtual tour link
+      - schedule a campus visit
+      - visit
+      - tour
+      - campus
+      - कलेज भ्रमण गर्न सकिन्छ? (NE)
+      - भिजिट (NE)
+      - भ्रमण (NE)
+      - college ghumna milchha? (NE_ROM)
+      - virtual tour herna kahan milchha? (NE_ROM)
+      - visit garna milcha (NE_ROM)
+
+  - intent: admission_apply
+    examples: |
+      - how to apply for admission?
+      - online application form
+      - apply to gcm
+      - admission
+      - apply
+      - form
+      - registration
+      - भर्ना कसरी हुने? (NE)
+      - भर्ना (NE)
+      - फारम (NE)
+      - admission kasari line? (NE_ROM)
+      - online form bharna milchha? (NE_ROM)
+      - bharna (NE_ROM)
+
+  - intent: admission_eligibility
+    examples: |
+      - eligibility criteria for management
+      - who can join plus two?
+      - required gpa for admission
+      - eligibility
+      - criteria
+      - gpa
+      - qualification
+      - भर्नाका लागि योग्यता के हो? (NE)
+      - योग्यता (NE)
+      - admission ko lagi k k chahinchha? (NE_ROM)
+      - kati gpa chahinchha join garna? (NE_ROM)
+      - yogyata (NE_ROM)
+
+  - intent: entrance_exam
+    examples: |
+      - is there an entrance exam?
+      - entrance examination date
+      - entrance test for admissions
+      - entrance
+      - exam
+      - test
+      - syllabus
+      - इन्ट्रान्स परीक्षा हुन्छ? (NE)
+      - इन्ट्रान्स (NE)
+      - entrance exam dinu parchha? (NE_ROM)
+      - kaile hunchha entrance? (NE_ROM)
+      - exam kaile ho (NE_ROM)
+
+  - intent: scholarship_info
+    examples: |
+      - does gcm offer scholarships?
+      - scholarship criteria
+      - financial aid for students
+      - scholarship
+      - discount
+      - quota
+      - free
+      - छात्रवृत्ति सुविधा छ? (NE)
+      - छात्रवृत्ति (NE)
+      - scholarship pauchha ki nai? (NE_ROM)
+      - scholarship kasari line? (NE_ROM)
+      - chatrabriti (NE_ROM)
+
+  - intent: ca_preparation
+    examples: |
+      - how is gcm for ca?
+      - chartered accountancy foundation classes
+      - does the college support ca students?
+      - ca
+      - chartered accountancy
+      - ca foundation
+      - सीए तयारी कसरी हुन्छ? (NE)
+      - सीए (NE)
+      - CA ko lagi gcm kasto chha? (NE_ROM)
+      - CA padhna help hunchha? (NE_ROM)
+      - ca foundation (NE_ROM)
+
+  - intent: sports_facilities
+    examples: |
+      - sports facilities at gcm
+      - basketball and futsal
+      - is there a gym or playground?
+      - sports
+      - basketball
+      - futsal
+      - playground
+      - gym
+      - खेलकुद सुविधा कस्तो छ? (NE)
+      - खेलकुद (NE)
+      - बास्केटबल (NE)
+      - gcm ma basketball ground chha? (NE_ROM)
+      - sports tournaments hunchha? (NE_ROM)
+      - khelkud (NE_ROM)
+
+  - intent: student_clubs
+    examples: |
+      - which clubs can i join?
+      - student activities and music club
+      - debate club and social club
+      - clubs
+      - music club
+      - debate club
+      - activities
+      - कलेजमा कुन कुन क्लबहरू छन्? (NE)
+      - क्लब (NE)
+      - club haru k k chha? (NE_ROM)
+      - music club join garna milchha? (NE_ROM)
+      - club join (NE_ROM)
 
   - intent: contact_support
     examples: |
-      - contact support
       - agent
       - human help
       - call me
+      - talk to person
+      - human
+      - help
+      - person
       - सहयोग (NE)
       - एजेन्ट (NE)
-      - मानव सहयोग (NE)
-      - agent sanga kura (NE_ROM)
       - manche support (NE_ROM)
       - human help (NE_ROM)
-
-  - intent: kyc_update
-    examples: |
-      - update kyc
-      - change kyc
-      - address update
-      - document update
-      - KYC अपडेट (NE)
-      - ठेगाना परिवर्तन (NE)
-      - कागजात अपडेट (NE)
-      - kyc update (NE_ROM)
-      - thegana update (NE_ROM)
-      - document update (NE_ROM)
-
-  - intent: reset_password
-    examples: |
-      - reset password
-      - forgot password
-      - password change
-      - पासवर्ड रिसेट (NE)
-      - पासवर्ड बिर्सें (NE)
-      - पासवर्ड परिवर्तन (NE)
-      - password reset (NE_ROM)
-      - password birse (NE_ROM)
-      - password change (NE_ROM)
+      - help chahiyo (NE_ROM)

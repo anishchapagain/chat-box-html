@@ -5,6 +5,7 @@ from app.models.models import User, Conversation, InteractionLog, FAQ
 from app.core.schemas import IncomingMessage, ChannelType, ConversationStatus, SenderType, DetectedLanguage
 from app.api.websockets import manager
 from app.core.audit_log import log_event
+from app.core.config import settings
 
 from app.services.nlu_service import nlu_service
 
@@ -13,24 +14,40 @@ class LanguageService:
     def detect_language(text: str) -> DetectedLanguage:
         """
         Heuristic language detection.
-        Improved to avoid false positives on short tokens.
+        Uses configurable keywords for Romanized Nepali.
         """
         text_lower = text.lower()
-        
+
         # Simple heuristic: Devnagari characters -> Nepali
         if re.search(r'[\u0900-\u097F]', text):
             return DetectedLanguage.NE
-            
-        # Romanized Nepali keywords - focus on specific words
-        ne_rom_keywords = ['kasto', 'kasari', 'khata', 'kholne', 'laagi', 'chha', 'ho', 'bhayeko']
-        # Check if any keyword matches as a full word
-        if any(re.search(rf'\b{word}\b', text_lower) for word in ne_rom_keywords):
+
+        # Check if any configured keyword matches as a full word
+        if any(re.search(rf'\b{word}\b', text_lower) for word in settings.NE_ROM_KEYWORDS):
             return DetectedLanguage.NE_ROM
-            
+
         # Default fallback
         return DetectedLanguage.EN
 
+class GuardrailService:
+    @staticmethod
+    def should_escalate_to_human(text: str) -> bool:
+        """
+        Check if message contains keywords that should trigger immediate human attention.
+        """
+        text_lower = text.lower()
+        return any(re.search(rf'\b{word}\b', text_lower) for word in settings.GUARDRAIL_KEYWORDS)
+
+    @staticmethod
+    def is_profane(text: str) -> bool:
+        """
+        Check if message contains inappropriate language.
+        """
+        text_lower = text.lower()
+        return any(re.search(rf'\b{word}\b', text_lower) for word in settings.PROFANITY_KEYWORDS)
+
 class FAQService:
+
     @staticmethod
     def find_best_match(db: Session, text: str, lang: DetectedLanguage):
         """
@@ -88,6 +105,23 @@ class OmnichannelService:
 
         # 3. Log Incoming User Message
         detected_lang = LanguageService.detect_language(msg.content)
+        
+        # 3.1 Profanity Guardrail (Immediate Exit)
+        if GuardrailService.is_profane(msg.content):
+            log_event(
+                "profanity_detected",
+                conversation_id=conv.id,
+                user_identifier=user.identifier,
+                message_content=msg.content
+            )
+            OmnichannelService.send_outbound_message(
+                msg.identifier,
+                msg.channel,
+                settings.PROFANITY_RESPONSE,
+                conversation_id=conv.id
+            )
+            return # Stop processing this message
+
         user_log = InteractionLog(
             conversation_id=conv.id,
             sender_type=SenderType.USER,
@@ -96,18 +130,20 @@ class OmnichannelService:
         )
         db.add(user_log)
         db.commit()
-        log_event(
-            "incoming_message",
-            conversation_id=conv.id,
-            user_identifier=user.identifier,
-            channel=msg.channel,
-            conversation_status=conv.status,
-            sender=SenderType.USER,
-            message_content=msg.content,
-            detected_language=detected_lang,
-        )
 
-        # 4. State Machine Routing
+        # 4. Guardrail / Escalation Check
+        if conv.status == ConversationStatus.ACTIVE_AUTO:
+            if GuardrailService.should_escalate_to_human(msg.content):
+                conv.status = ConversationStatus.PENDING_HUMAN
+                db.commit()
+                log_event(
+                    "conversation_status_changed",
+                    conversation_id=conv.id,
+                    new_status=conv.status,
+                    reason="guardrail_escalation"
+                )
+
+        # 5. State Machine Routing
         if conv.status == ConversationStatus.ACTIVE_HUMAN or conv.status == ConversationStatus.PENDING_HUMAN:
             OmnichannelService._broadcast_dashboard_message(
                 conv=conv,
