@@ -1,0 +1,85 @@
+Access Token
+EAASH52f0fPMBRfWeEZBAzaEBeNSGi4HD3OCCvg9Pt5LiRK5MZAHEwlGDumGeRhYLVPxaHBpxErbXZCFVlZCTKn55QG8qfUS2o4BbWRi3RHNLNcOgZA9FO7uiUS5AeB44IdlLCHeVdQW8QWZBEBfae8Wr07tpI9vQdem2CS4QgqYFjoTYZBfBkDaP42IqKO64XniPcT6yBlgIGwmocN9HPmCYZALFyrp4p7CTSX7F4T89XvDJSGfp9KZC1abmZBNpov2LEZBuC757sKt6evCXmcoHvk6dT83
+
+WhatsApp Business Account ID: 1618991829362044
+Phone number ID: 1026264880577891
+
+curl -i -X POST `
+  https://graph.facebook.com/v25.0/1026264880577891/messages `
+  -H 'Authorization: Bearer EAASH52f0fPMBRfWeEZBAzaEBeNSGi4HD3OCCvg9Pt5LiRK5MZAHEwlGDumGeRhYLVPxaHBpxErbXZCFVlZCTKn55QG8qfUS2o4BbWRi3RHNLNcOgZA9FO7uiUS5AeB44IdlLCHeVdQW8QWZBEBfae8Wr07tpI9vQdem2CS4QgqYFjoTYZBfBkDaP42IqKO64XniPcT6yBlgIGwmocN9HPmCYZALFyrp4p7CTSX7F4T89XvDJSGfp9KZC1abmZBNpov2LEZBuC757sKt6evCXmcoHvk6dT83' `
+  -H 'Content-Type: application/json' `
+  -d '{ \"messaging_product\": \"whatsapp\", \"to\": \"9779840065449\", \"type\": \"template\", \"template\": { \"name\": \"hello_world\", \"language\": { \"code\": \"en_US\" } } }'
+
+https://chrome-mangle-schedule.ngrok-free.dev
+
+Test message successfully sent to 9779840065449
+If not received, first send a WhatsApp message from the recipient phone to your business number to open a conversation window, 
+then resend.
+
+curl -i -X POST `
+  https://graph.facebook.com/v25.0/1026264880577891/messages `
+  -H 'Authorization: Bearer EAASH52f0fPMBRRkjQv25nsujiW6vt1X7ua3uKS9FZBOM9u7rX2UdPbLTO0sgxty92dk30wIz8TIZCPNX8kdufzOyRpvUjrkor0N0nEpezYkN4FlI7zVh9TbAjsRNSxXh5wcCl97aFd59Y47ilWTv5bGVwrHV5fxFTT4St3EsyqENFl3v6foEMOsXE3ecj3ZBZCYcAZCWiKZCr5ZCujdQLHMO9FWZCi7cMAAZCM2bE99L6ZCekmTZBbaM46FAUp8Bg9zgZBJAKk4TQzRs84YlirdgK8LwmG9P' `
+  -H 'Content-Type: application/json' `
+  -d '{ \"messaging_product\": \"whatsapp\", \"to\": \"9779840065449\", \"type\": \"template\", \"template\": { \"name\": \"hello_world\", \"language\": { \"code\": \"en_US\" } } }'
+
+
+
+(venv) PS D:\PythonProjects\ChatBotWhats> python3 .\webhook_server.py
+🚀 Starting Webhook Server on port 8000...
+Make sure to set your Verify Token in Meta to: OmniToken123
+INFO:     Started server process [8432]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+✅ Webhook verified successfully!
+INFO:     2a03:2880:ff:51:::0 - "GET /webhook?hub.mode=subscribe&hub.challenge=520898298&hub.verify_token=OmniToken123&hub_mode=subscribe&hub_challenge=520898298&hub_verify_token=OmniToken123 HTTP/1.1" 200 OK
+
+--- 📨 NEW DATA FROM WHATSAPP ---
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "1618991829362044",
+      "changes": [
+        {
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "15556322955",
+              "phone_number_id": "1026264880577891"
+            },
+            "contacts": [
+              {
+                "profile": {
+                  "name": "Anish Chapagain"
+                },
+                "wa_id": "9779840065449",
+                "user_id": "NP.1579606936477989"
+              }
+            ],
+            "messages": [
+              {
+                "from": "9779840065449",
+                "from_user_id": "NP.1579606936477989",
+                "id": "wamid.HBgNOTc3OTg0MDA2NTQ0ORUCABIYFDNBN0E2NkZFNEI0RERFQUFFMkJEAA==",
+                "timestamp": "1776942104",
+                "text": {
+                  "body": "testing 123"
+                },
+                "type": "text"
+              }
+            ]
+          },
+          "field": "messages"
+        }
+      ]
+    }
+  ]
+}
+
+💬 Message from 9779840065449: testing 123
+INFO:     2a03:2880:10ff:5f:::0 - "POST /webhook HTTP/1.1" 200 OK
+
+
+
+EAASH52f0fPMBRbRZAanH2ZCk08cGHiQN2HxPd6eBza7taqXGZCoHMpNMZC5J7emIZBlcHr3TqOtbXZAge0BNOCRcWZBj6zXgaf1ryR0cJ5rcKr1PMdkvK82amkBMF3WTp4Q129ss0ZBxkTJbomLqKs266wYPzYNVHZBFKFH9F9pS1oIanfTxaBgfZAfOLZBGOZBJpiebZBqQXV9WKPFMnArjYI6vMkenQVEQslmunHcwZCQrmo

@@ -300,6 +300,7 @@ class CapitalMaxChatAgent {
                 // Throwing an error here normally, but we mock it for demo.
                 console.warn("API request failed or missing. Using mock ticket ID.");
                 ticketId = `TKT-${Math.floor(Math.random() * 100000)}`;
+                // console.log("Mock ticket ID:", ticketId);
             }
 
             this.removeTypingIndicator();
