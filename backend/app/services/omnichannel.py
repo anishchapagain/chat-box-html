@@ -229,6 +229,8 @@ class OmnichannelService:
                 conversation_id=conv.id,
             )
 
+from app.services.whatsapp_service import WhatsAppService
+
     @staticmethod
     def send_outbound_message(
         identifier: str,
@@ -247,8 +249,13 @@ class OmnichannelService:
             message_content=content,
         )
         if channel == ChannelType.WHATSAPP:
-            print(f"[WHATSAPP OUT] To {identifier}: {content}")
-            # Call Meta Graph API here
+            # Call Real Meta Graph API
+            success, result = WhatsAppService.send_text_message(identifier, content, conversation_id)
+            if success:
+                print(f"✅ WhatsApp Delivered to {identifier}")
+            else:
+                print(f"❌ WhatsApp Failed for {identifier}: {result}")
+                
         elif channel == ChannelType.WEB_WIDGET:
             print(f"[WEB OUT] To {identifier}: {content}")
-            # Send via WebSockets to Web Widget
+            # In a full implementation, you would emit a Socket.io or WS event to the specific client
