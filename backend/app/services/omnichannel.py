@@ -8,6 +8,7 @@ from app.core.audit_log import log_event
 from app.core.config import settings
 
 from app.services.nlu_service import nlu_service
+from app.services.whatsapp_service import WhatsAppService
 
 class LanguageService:
     @staticmethod
@@ -229,7 +230,7 @@ class OmnichannelService:
                 conversation_id=conv.id,
             )
 
-from app.services.whatsapp_service import WhatsAppService
+
 
     @staticmethod
     def send_outbound_message(
